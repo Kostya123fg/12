@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>💡 Ставки от AI</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -213,6 +214,23 @@
         console.log('🔗 API_BASE:', API_BASE);
 
         // ========== DOM ЭЛЕМЕНТЫ ==========
+        // Инициализация Telegram WebApp
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Получаем user_id из Telegram
+        let userId = null;
+        try {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                userId = tg.initDataUnsafe.user.id;
+                console.log('Telegram User ID:', userId);
+            } else {
+                console.warn('Не удалось получить user_id из Telegram WebApp');
+            }
+        } catch (e) {
+            console.error('Ошибка получения user_id:', e);
+        }
+
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const uploadPrompt = document.getElementById('uploadPrompt');
@@ -238,7 +256,9 @@
         // Инициализация счетчика попыток - теперь получаем с сервера
         async function initAttempts() {
             try {
-                const response = await fetch(`${API_BASE}/attempts`);
+                const url = userId ? `/attempts?user_id=${userId}` : '/attempts';
+                const response = await fetch(url);
+
                 const data = await response.json();
                 
                 if (data.success) {
@@ -402,9 +422,12 @@
 
             const formData = new FormData();
             formData.append('image', selectedFile);
+            if (userId) {
+                formData.append('user_id', userId);
+            }
 
             try {
-                const response = await fetch(`${API_BASE}/analyze`, {
+                const response = await fetch('/analyze', {
                     method: 'POST',
                     body: formData
                 });
