@@ -209,7 +209,6 @@
         const serverFromUrl = urlParams.get('server');
         
         let API_BASE = serverFromUrl || 'http://localhost:5000';
-        const MAX_ATTEMPTS = 10;
         
         console.log('🔗 API_BASE:', API_BASE);
 
@@ -266,8 +265,9 @@
                 }
             } catch (error) {
                 console.error('Ошибка загрузки информации о попытках:', error);
-                // Если не удалось загрузить, показываем дефолтное значение
-                updateAttemptsDisplay({ used: 0, remaining: MAX_ATTEMPTS, total: MAX_ATTEMPTS });
+                // Показываем ошибку, не используем захардкоженные значения
+                attemptsCounter.textContent = '—';
+                attemptsCounterMain.textContent = '—';
             }
         }
 
