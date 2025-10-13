@@ -396,10 +396,15 @@
 
                 if (response.status === 429) {
                     // Лимит исчерпан
-                    showError(data.error || 'Вы исчерпали все попытки на сегодня!');
                     if (data.attempts) {
                         updateAttemptsDisplay(data.attempts);
                     }
+                    // Показываем ошибку с кнопкой покупки
+                    showError(
+                        data.error || 'Вы исчерпали все попытки на сегодня!',
+                        data.purchase_url,
+                        data.purchase_text
+                    );
                     return;
                 }
 
@@ -477,12 +482,34 @@
             analyticsText.innerHTML = formatted;
         }
 
-        function showError(message) {
-            errorText.textContent = message;
+        function showError(message, purchaseUrl = null, purchaseText = null) {
+            // Очищаем предыдущее содержимое
+            errorText.innerHTML = '';
+            
+            // Добавляем сообщение об ошибке
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+            messageDiv.className = 'mb-3';
+            errorText.appendChild(messageDiv);
+            
+            // Если есть ссылка на покупку, показываем кнопку
+            if (purchaseUrl && purchaseText) {
+                const purchaseBtn = document.createElement('a');
+                purchaseBtn.href = purchaseUrl;
+                purchaseBtn.target = '_blank';
+                purchaseBtn.className = 'inline-block bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors mt-2';
+                purchaseBtn.textContent = purchaseText;
+                errorText.appendChild(purchaseBtn);
+            }
+            
             errorArea.classList.remove('hidden');
-            setTimeout(() => {
-                errorArea.classList.add('hidden');
-            }, 5000);
+            
+            // Автоскрытие только если нет кнопки покупки
+            if (!purchaseUrl) {
+                setTimeout(() => {
+                    errorArea.classList.add('hidden');
+                }, 5000);
+            }
         }
     </script>
 </body>
