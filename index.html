@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>💡 Ставки от AI</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -203,31 +202,15 @@
     </div>
 
     <script>
-        // ========== КОНФИГУРАЦИЯ ==========
-        // ВАЖНО: Замените на адрес вашего Flask сервера
-        let API_URL = '';
+        // ========== КОНФИГУРАЦИЯ API ==========
+        // Получаем API сервер из URL параметра (для универсальности)
+        const urlParams = new URLSearchParams(window.location.search);
+        const serverFromUrl = urlParams.get('server');
+        
+        let API_BASE = serverFromUrl || 'http://localhost:5000';
         const MAX_ATTEMPTS = 10;
-
-        // Получаем конфигурацию с сервера (скрывает API URL от покупателей)
-        async function initApp() {
-            try {
-                // Запрашиваем конфиг с Flask сервера
-                const response = await fetch('YOUR_SERVER_IP:5000/config');
-                const config = await response.json();
-                API_URL = config.api_url;
-                
-                console.log('✅ API подключен');
-                
-                // Инициализируем счетчик попыток
-                await initAttempts();
-            } catch (error) {
-                console.error('❌ Ошибка загрузки конфига:', error);
-                showError('Ошибка подключения к серверу. Проверьте интернет соединение.');
-            }
-        }
-
-        // Запускаем при загрузке страницы
-        initApp();
+        
+        console.log('🔗 API_BASE:', API_BASE);
 
         // ========== DOM ЭЛЕМЕНТЫ ==========
         const uploadArea = document.getElementById('uploadArea');
@@ -252,12 +235,10 @@
 
         let selectedFile = null;
 
-        // ========== ПОПЫТКИ ==========
+        // Инициализация счетчика попыток - теперь получаем с сервера
         async function initAttempts() {
-            if (!API_URL) return;
-            
             try {
-                const response = await fetch(`${API_URL}/attempts`);
+                const response = await fetch(`${API_BASE}/attempts`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -265,18 +246,22 @@
                 }
             } catch (error) {
                 console.error('Ошибка загрузки информации о попытках:', error);
+                // Если не удалось загрузить, показываем дефолтное значение
                 updateAttemptsDisplay({ used: 0, remaining: MAX_ATTEMPTS, total: MAX_ATTEMPTS });
             }
         }
 
+        // Обновление отображения счетчика
         function updateAttemptsDisplay(attemptsData) {
             const remaining = attemptsData.remaining;
             const total = attemptsData.total;
             const counterText = `${remaining} из ${total}`;
             
+            // Обновляем оба счетчика
             attemptsCounter.textContent = counterText;
             attemptsCounterMain.textContent = counterText;
             
+            // Меняем цвет в зависимости от остатка
             if (remaining <= 2) {
                 attemptsCounter.classList.add('text-red-400');
                 attemptsCounter.classList.remove('text-yellow-400', 'text-white');
@@ -297,22 +282,28 @@
             return remaining;
         }
 
-        // ========== ЗАГРУЗКА ФАЙЛОВ ==========
+        // Инициализация при загрузке страницы
+        initAttempts();
+
+        // Click to upload
         uploadArea.addEventListener('click', () => {
             if (!selectedFile) {
                 fileInput.click();
             }
         });
 
+        // File input change
         fileInput.addEventListener('change', (e) => {
             handleFile(e.target.files[0]);
         });
 
+        // Change image button
         changeImageBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             resetUI();
         });
 
+        // Paste from clipboard
         document.addEventListener('paste', (e) => {
             const items = e.clipboardData?.items;
             if (items) {
@@ -326,6 +317,7 @@
             }
         });
 
+        // Drag and drop
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.classList.add('dragover');
@@ -349,11 +341,12 @@
             uploadPrompt.classList.remove('hidden');
             imagePreview.classList.add('hidden');
             analyzeBtn.classList.add('hidden');
-            attemptsInfo.classList.add('hidden');
+            attemptsInfo.classList.add('hidden');  // Скрываем счетчик
             resultsSection.classList.add('hidden');
             errorArea.classList.add('hidden');
         }
 
+        // Handle file selection
         function handleFile(file) {
             if (!file || !file.type.startsWith('image/')) {
                 showError('Пожалуйста, выберите изображение');
@@ -372,17 +365,18 @@
                 uploadPrompt.classList.add('hidden');
                 imagePreview.classList.remove('hidden');
                 analyzeBtn.classList.remove('hidden');
-                attemptsInfo.classList.remove('hidden');
+                attemptsInfo.classList.remove('hidden');  // Показываем счетчик
                 resultsSection.classList.add('hidden');
                 errorArea.classList.add('hidden');
             };
             reader.readAsDataURL(file);
         }
 
-        // ========== АНАЛИЗ ==========
+        // Analyze button click
         analyzeBtn.addEventListener('click', async () => {
-            if (!selectedFile || !API_URL) return;
+            if (!selectedFile) return;
 
+            // Show loading state
             analyzeBtn.disabled = true;
             btnText.textContent = 'Анализируем...';
             btnSpinner.classList.remove('hidden');
@@ -393,7 +387,7 @@
             formData.append('image', selectedFile);
 
             try {
-                const response = await fetch(`${API_URL}/analyze`, {
+                const response = await fetch(`${API_BASE}/analyze`, {
                     method: 'POST',
                     body: formData
                 });
@@ -401,6 +395,7 @@
                 const data = await response.json();
 
                 if (response.status === 429) {
+                    // Лимит исчерпан
                     showError(data.error || 'Вы исчерпали все попытки на сегодня!');
                     if (data.attempts) {
                         updateAttemptsDisplay(data.attempts);
@@ -409,9 +404,11 @@
                 }
 
                 if (data.success) {
+                    // Обновляем счетчик попыток с сервера
                     if (data.attempts) {
                         const remaining = updateAttemptsDisplay(data.attempts);
                         
+                        // Если попытки закончились, показываем уведомление
                         if (remaining === 0) {
                             setTimeout(() => {
                                 showError('Это была ваша последняя попытка на сегодня!');
@@ -419,6 +416,7 @@
                         }
                     }
                     
+                    // Форматируем и отображаем результаты
                     displayResults(data);
                     resultsSection.classList.remove('hidden');
                 } else {
@@ -434,13 +432,20 @@
         });
 
         function displayResults(data) {
+            // Получаем данные от AI
             const confidence = data.confidence || 70;
             const recommendedBet = data.recommended_bet || 'Анализ';
             const analysisText = data.analysis || data.description || '';
             
+            // Отображаем уверенность AI
             confidenceValue.textContent = confidence + '%';
+            
+            // Отображаем рекомендованную ставку
             signalValue.textContent = recommendedBet;
             
+            // Генерируем статистику событий на основе уверенности AI
+            // Основная ставка получает процент уверенности
+            // Остальные варианты - рассчитываются относительно
             const baseConfidence = confidence;
             const stats = [
                 { label: recommendedBet, percent: baseConfidence },
@@ -461,12 +466,13 @@
                 </div>
             `).join('');
             
+            // Форматируем текст аналитики
             let formatted = analysisText
-                .replace(/\\n\\n/g, '<br><br>')
-                .replace(/\\n/g, '<br>')
-                .replace(/\n\n/g, '<br><br>')
-                .replace(/\n/g, '<br>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                .replace(/\\n\\n/g, '<br><br>')  // Двойные переносы
+                .replace(/\\n/g, '<br>')          // Одинарные переносы
+                .replace(/\n\n/g, '<br><br>')     // Реальные двойные переносы
+                .replace(/\n/g, '<br>')           // Реальные одинарные переносы
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');  // Жирный текст
             
             analyticsText.innerHTML = formatted;
         }
