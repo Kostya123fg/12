@@ -255,6 +255,23 @@
         function updateAttemptsDisplay(attemptsData) {
             const remaining = attemptsData.remaining;
             const total = attemptsData.total;
+            const unlimited = attemptsData.unlimited || false;
+            
+            // Если безлимит - показываем "Безлимит"
+            if (unlimited || remaining === -1) {
+                const counterText = 'Безлимит';
+                attemptsCounter.textContent = counterText;
+                attemptsCounterMain.textContent = counterText;
+                
+                // Золотой цвет для безлимита
+                attemptsCounter.classList.add('text-yellow-400');
+                attemptsCounter.classList.remove('text-red-400', 'text-white');
+                attemptsCounterMain.classList.add('text-yellow-400');
+                attemptsCounterMain.classList.remove('text-red-400', 'text-emerald-400');
+                
+                return -1; // Возвращаем -1 для безлимита
+            }
+            
             const counterText = `${remaining} из ${total}`;
             
             // Обновляем оба счетчика
