@@ -435,4 +435,14 @@ function showError(message, purchaseUrl = null, purchaseText = null) {
 }
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
-initAttempts();
+// Вызываем после полной загрузки страницы
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 Страница загружена, инициализация...');
+    initAttempts();
+});
+
+// Также вызываем сразу (на случай если DOMContentLoaded уже произошел)
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    console.log('📄 Страница уже загружена, инициализация...');
+    setTimeout(() => initAttempts(), 100);
+}
