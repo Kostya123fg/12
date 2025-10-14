@@ -162,7 +162,7 @@
 
         <!-- Attempts Counter (always visible) -->
         <div id="attemptsInfo" class="text-center text-gray-400 text-xs mt-3 mb-4 hidden">
-            Попыток сегодня: <span id="attemptsCounterMain" class="text-emerald-400 font-semibold">10 из 10</span>
+            <span id="attemptsLabelMain">Попыток сегодня:</span> <span id="attemptsCounterMain" class="text-emerald-400 font-semibold">10 из 10</span>
         </div>
 
         <!-- Results Section -->
@@ -200,7 +200,7 @@
 
             <!-- Footer -->
             <div class="text-center text-gray-500 text-xs py-4">
-                Осталось попыток на сегодня: <span id="attemptsCounter" class="text-white font-semibold">10 из 10</span>
+                <span id="attemptsLabel">Осталось попыток на сегодня:</span> <span id="attemptsCounter" class="text-white font-semibold">10 из 10</span>
             </div>
         </div>
 
@@ -424,6 +424,13 @@
             const btnTextEl = document.getElementById('btnText');
             const analyzeBtnEl = document.getElementById('analyzeBtn');
             if (btnTextEl && (!analyzeBtnEl || !analyzeBtnEl.disabled)) btnTextEl.textContent = t.analyzeBtn;
+            
+            // Счетчики попыток
+            const attemptsLabelMain = document.getElementById('attemptsLabelMain');
+            if (attemptsLabelMain) attemptsLabelMain.textContent = t.attemptsToday;
+            
+            const attemptsLabel = document.getElementById('attemptsLabel');
+            if (attemptsLabel) attemptsLabel.textContent = t.attemptsLeft;
             
             // Секция результатов
             const confidenceLabels = document.querySelectorAll('.text-gray-400.text-xs.mb-1');
