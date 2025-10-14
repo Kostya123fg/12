@@ -47,6 +47,12 @@ const attemptsInfo = document.getElementById('attemptsInfo');
 
 let selectedFile = null;
 
+// ========== ПЕРЕКЛЮЧЕНИЕ ЯЗЫКА ==========
+const currentLangBtn = document.getElementById('currentLang');
+const langDropdown = document.getElementById('langDropdown');
+const langFlag = document.getElementById('langFlag');
+const langCode = document.getElementById('langCode');
+
 // Toggle dropdown
 currentLangBtn.addEventListener('click', (e) => {
     e.stopPropagation();
