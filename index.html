@@ -111,9 +111,19 @@
                 <span class="text-xl">💡</span>
                 <h1 class="text-emerald-400 text-lg font-bold">Ставки от AI</h1>
             </div>
-            <div class="flex items-center gap-2 px-3 py-1 rounded-full" style="background: rgba(30, 41, 59, 0.8);">
-                <span style="font-size: 14px;">🇷🇺</span>
-                <span class="text-gray-300 text-xs font-medium">RU</span>
+            <div id="langSelector" class="flex items-center gap-2 px-3 py-1 rounded-full cursor-pointer hover:bg-opacity-80 transition" style="background: rgba(30, 41, 59, 0.8);">
+                <span id="currentFlag" style="font-size: 14px;">🇷🇺</span>
+                <span id="currentLangName" class="text-gray-300 text-xs font-medium">RU</span>
+            </div>
+        </div>
+
+        <!-- Language Modal -->
+        <div id="langModal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" style="backdrop-filter: blur(5px);">
+            <div class="card p-6 max-w-sm w-full mx-4">
+                <h2 class="text-white text-lg font-bold mb-4 text-center">Выберите язык / Choose language</h2>
+                <div id="langList" class="space-y-2 max-h-96 overflow-y-auto">
+                    <!-- Languages will be inserted here -->
+                </div>
             </div>
         </div>
 
@@ -203,6 +213,230 @@
     </div>
 
     <script>
+        // ========== МУЛЬТИЯЗЫЧНОСТЬ ==========
+        const translations = {
+            ru: {
+                title: 'Ставки от AI',
+                category: 'Футбол',
+                uploadTitle: '📸 Загрузите изображение события',
+                uploadSubtitle: 'Или просто вставьте скриншот (Ctrl + V)',
+                changeImage: '📤 Попробовать другое изображение',
+                analyzeBtn: '🔍 Проанализировать ставку',
+                analyzing: 'Анализируем...',
+                confidence: 'УВЕРЕННОСТЬ AI',
+                signal: 'НАДЕЖНЫЙ СИГНАЛ',
+                events: '% СОБЫТИЙ',
+                analytics: 'AI АНАЛИТИКА',
+                attemptsToday: 'Попыток сегодня:',
+                attemptsLeft: 'Осталось попыток на сегодня:',
+                unlimited: 'Безлимит',
+                errorSize: 'Размер файла не должен превышать 10MB',
+                errorImage: 'Пожалуйста, выберите изображение'
+            },
+            en: {
+                title: 'AI Betting',
+                category: 'Football',
+                uploadTitle: '📸 Upload event image',
+                uploadSubtitle: 'Or just paste a screenshot (Ctrl + V)',
+                changeImage: '📤 Try another image',
+                analyzeBtn: '🔍 Analyze bet',
+                analyzing: 'Analyzing...',
+                confidence: 'AI CONFIDENCE',
+                signal: 'RELIABLE SIGNAL',
+                events: '% EVENTS',
+                analytics: 'AI ANALYTICS',
+                attemptsToday: 'Attempts today:',
+                attemptsLeft: 'Attempts left today:',
+                unlimited: 'Unlimited',
+                errorSize: 'File size must not exceed 10MB',
+                errorImage: 'Please select an image'
+            },
+            hi: {
+                title: 'AI से दांव',
+                category: 'फुटबॉल',
+                uploadTitle: '📸 इवेंट छवि अपलोड करें',
+                uploadSubtitle: 'या बस एक स्क्रीनशॉट पेस्ट करें (Ctrl + V)',
+                changeImage: '📤 दूसरी छवि आज़माएं',
+                analyzeBtn: '🔍 दांव का विश्लेषण करें',
+                analyzing: 'विश्लेषण कर रहे हैं...',
+                confidence: 'AI विश्वास',
+                signal: 'विश्वसनीय संकेत',
+                events: '% घटनाएं',
+                analytics: 'AI विश्लेषण',
+                attemptsToday: 'आज के प्रयास:',
+                attemptsLeft: 'आज शेष प्रयास:',
+                unlimited: 'असीमित',
+                errorSize: 'फ़ाइल का आकार 10MB से अधिक नहीं होना चाहिए',
+                errorImage: 'कृपया एक छवि चुनें'
+            },
+            es: {
+                title: 'Apuestas IA',
+                category: 'Fútbol',
+                uploadTitle: '📸 Subir imagen del evento',
+                uploadSubtitle: 'O simplemente pega una captura (Ctrl + V)',
+                changeImage: '📤 Probar otra imagen',
+                analyzeBtn: '🔍 Analizar apuesta',
+                analyzing: 'Analizando...',
+                confidence: 'CONFIANZA IA',
+                signal: 'SEÑAL CONFIABLE',
+                events: '% EVENTOS',
+                analytics: 'ANÁLISIS IA',
+                attemptsToday: 'Intentos hoy:',
+                attemptsLeft: 'Intentos restantes hoy:',
+                unlimited: 'Ilimitado',
+                errorSize: 'El tamaño del archivo no debe superar los 10MB',
+                errorImage: 'Por favor selecciona una imagen'
+            },
+            az: {
+                title: 'AI Mərcləri',
+                category: 'Futbol',
+                uploadTitle: '📸 Tədbir şəklini yükləyin',
+                uploadSubtitle: 'Və ya sadəcə ekran görüntüsü yapışdırın (Ctrl + V)',
+                changeImage: '📤 Başqa şəkil sınayın',
+                analyzeBtn: '🔍 Mərci təhlil edin',
+                analyzing: 'Təhlil edilir...',
+                confidence: 'AI ƏMINLIK',
+                signal: 'ETİBARLI SİQNAL',
+                events: '% HADİSƏLƏR',
+                analytics: 'AI TƏHLİL',
+                attemptsToday: 'Bu gün cəhdlər:',
+                attemptsLeft: 'Bu gün qalan cəhdlər:',
+                unlimited: 'Limitsiz',
+                errorSize: 'Fayl ölçüsü 10MB-dan çox olmamalıdır',
+                errorImage: 'Zəhmət olmasa şəkil seçin'
+            },
+            pt: {
+                title: 'Apostas IA',
+                category: 'Futebol',
+                uploadTitle: '📸 Carregar imagem do evento',
+                uploadSubtitle: 'Ou apenas cole uma captura (Ctrl + V)',
+                changeImage: '📤 Tentar outra imagem',
+                analyzeBtn: '🔍 Analisar aposta',
+                analyzing: 'Analisando...',
+                confidence: 'CONFIANÇA IA',
+                signal: 'SINAL CONFIÁVEL',
+                events: '% EVENTOS',
+                analytics: 'ANÁLISE IA',
+                attemptsToday: 'Tentativas hoje:',
+                attemptsLeft: 'Tentativas restantes hoje:',
+                unlimited: 'Ilimitado',
+                errorSize: 'O tamanho do arquivo não deve exceder 10MB',
+                errorImage: 'Por favor, selecione uma imagem'
+            },
+            tr: {
+                title: 'AI Bahisleri',
+                category: 'Futbol',
+                uploadTitle: '📸 Etkinlik görselini yükleyin',
+                uploadSubtitle: 'Veya sadece ekran görüntüsü yapıştırın (Ctrl + V)',
+                changeImage: '📤 Başka resim deneyin',
+                analyzeBtn: '🔍 Bahsi analiz et',
+                analyzing: 'Analiz ediliyor...',
+                confidence: 'AI GÜVENİ',
+                signal: 'GÜVENİLİR SİNYAL',
+                events: '% OLAYLAR',
+                analytics: 'AI ANALİZ',
+                attemptsToday: 'Bugün denemeler:',
+                attemptsLeft: 'Bugün kalan denemeler:',
+                unlimited: 'Sınırsız',
+                errorSize: 'Dosya boyutu 10MB\'ı geçmemelidir',
+                errorImage: 'Lütfen bir resim seçin'
+            },
+            ar: {
+                title: 'رهانات الذكاء الاصطناعي',
+                category: 'كرة القدم',
+                uploadTitle: '📸 تحميل صورة الحدث',
+                uploadSubtitle: 'أو قم بلصق لقطة شاشة (Ctrl + V)',
+                changeImage: '📤 جرب صورة أخرى',
+                analyzeBtn: '🔍 تحليل الرهان',
+                analyzing: 'جارٍ التحليل...',
+                confidence: 'ثقة الذكاء الاصطناعي',
+                signal: 'إشارة موثوقة',
+                events: '% الأحداث',
+                analytics: 'تحليل الذكاء الاصطناعي',
+                attemptsToday: 'المحاولات اليوم:',
+                attemptsLeft: 'المحاولات المتبقية اليوم:',
+                unlimited: 'غير محدود',
+                errorSize: 'يجب ألا يتجاوز حجم الملف 10 ميجابايت',
+                errorImage: 'الرجاء تحديد صورة'
+            },
+            uz: {
+                title: 'AI Tikish',
+                category: 'Futbol',
+                uploadTitle: '📸 Tadbir rasmini yuklang',
+                uploadSubtitle: 'Yoki shunchaki ekran tasvirini joylashtiring (Ctrl + V)',
+                changeImage: '📤 Boshqa rasmni sinab ko\'ring',
+                analyzeBtn: '🔍 Tikishni tahlil qiling',
+                analyzing: 'Tahlil qilinmoqda...',
+                confidence: 'AI ISHONCH',
+                signal: 'ISHONCHLI SIGNAL',
+                events: '% HODISALAR',
+                analytics: 'AI TAHLIL',
+                attemptsToday: 'Bugun urinishlar:',
+                attemptsLeft: 'Bugun qolgan urinishlar:',
+                unlimited: 'Cheksiz',
+                errorSize: 'Fayl hajmi 10MB dan oshmasligi kerak',
+                errorImage: 'Iltimos, rasm tanlang'
+            }
+        };
+
+        // Бразильский португальский (копия pt)
+        translations.br = { ...translations.pt };
+
+        // Языковые флаги и коды
+        const languages = [
+            { code: 'ru', flag: '🇷🇺', name: 'RU' },
+            { code: 'en', flag: '🇬🇧', name: 'EN' },
+            { code: 'hi', flag: '🇮🇳', name: 'HI' },
+            { code: 'es', flag: '🇪🇸', name: 'ES' },
+            { code: 'az', flag: '🇦🇿', name: 'AZ' },
+            { code: 'pt', flag: '🇵🇹', name: 'PT' },
+            { code: 'br', flag: '🇧🇷', name: 'BR' },
+            { code: 'tr', flag: '🇹🇷', name: 'TR' },
+            { code: 'ar', flag: '🇸🇦', name: 'AR' },
+            { code: 'uz', flag: '🇺🇿', name: 'UZ' }
+        ];
+
+        // Текущий язык (по умолчанию русский)
+        let currentLang = localStorage.getItem('language') || 'ru';
+
+        // Функция обновления текстов
+        function updateTexts() {
+            const t = translations[currentLang];
+            
+            // Заголовок и категория
+            const h1 = document.querySelector('h1');
+            if (h1) h1.textContent = t.title;
+            
+            const category = document.querySelector('.mb-4 span');
+            if (category) category.textContent = t.category;
+            
+            // Загрузка изображения
+            const uploadPrompt = document.getElementById('uploadPrompt');
+            if (uploadPrompt) {
+                const uploadTexts = uploadPrompt.querySelectorAll('p');
+                if (uploadTexts[0]) uploadTexts[0].textContent = t.uploadTitle;
+                if (uploadTexts[1]) uploadTexts[1].textContent = t.uploadSubtitle;
+            }
+            
+            const changeImageBtn = document.getElementById('changeImageBtn');
+            if (changeImageBtn) changeImageBtn.textContent = t.changeImage;
+            
+            const btnTextEl = document.getElementById('btnText');
+            const analyzeBtnEl = document.getElementById('analyzeBtn');
+            if (btnTextEl && (!analyzeBtnEl || !analyzeBtnEl.disabled)) btnTextEl.textContent = t.analyzeBtn;
+            
+            // Секция результатов
+            const confidenceLabels = document.querySelectorAll('.text-gray-400.text-xs.mb-1');
+            if (confidenceLabels[0]) confidenceLabels[0].textContent = t.confidence;
+            if (confidenceLabels[1]) confidenceLabels[1].textContent = t.signal;
+            
+            const eventsLabel = document.querySelectorAll('.text-gray-400.text-xs.mb-3')[0];
+            if (eventsLabel) eventsLabel.textContent = t.events;
+            
+            const analyticsTitle = document.querySelector('h3.text-white');
+            if (analyticsTitle) analyticsTitle.textContent = t.analytics;
+        }
+
         // ========== КОНФИГУРАЦИЯ API ==========
         // Получаем API сервер из URL параметра (для универсальности)
         const urlParams = new URLSearchParams(window.location.search);
@@ -276,10 +510,11 @@
             const remaining = attemptsData.remaining;
             const total = attemptsData.total;
             const unlimited = attemptsData.unlimited || false;
+            const t = translations[currentLang];
             
             // Если безлимит - показываем "Безлимит"
             if (unlimited || remaining === -1) {
-                const counterText = 'Безлимит';
+                const counterText = t.unlimited;
                 attemptsCounter.textContent = counterText;
                 attemptsCounterMain.textContent = counterText;
                 
@@ -318,6 +553,62 @@
             
             return remaining;
         }
+
+        // ========== ЯЗЫКОВОЙ ПЕРЕКЛЮЧАТЕЛЬ ==========
+        const langSelector = document.getElementById('langSelector');
+        const langModal = document.getElementById('langModal');
+        const langList = document.getElementById('langList');
+        const currentFlag = document.getElementById('currentFlag');
+        const currentLangName = document.getElementById('currentLangName');
+
+        // Генерация списка языков
+        function renderLanguages() {
+            langList.innerHTML = languages.map(lang => `
+                <div class="lang-item flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-slate-700 transition ${lang.code === currentLang ? 'bg-emerald-900 bg-opacity-30' : ''}" data-lang="${lang.code}">
+                    <span style="font-size: 20px;">${lang.flag}</span>
+                    <span class="text-white font-medium">${lang.name}</span>
+                    ${lang.code === currentLang ? '<span class="ml-auto text-emerald-400">✓</span>' : ''}
+                </div>
+            `).join('');
+
+            // Добавляем обработчики для каждого языка
+            document.querySelectorAll('.lang-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const newLang = item.dataset.lang;
+                    if (newLang !== currentLang) {
+                        currentLang = newLang;
+                        localStorage.setItem('language', newLang);
+                        updateLanguage();
+                        renderLanguages();
+                    }
+                    langModal.classList.add('hidden');
+                });
+            });
+        }
+
+        // Обновление языка интерфейса
+        function updateLanguage() {
+            const lang = languages.find(l => l.code === currentLang);
+            currentFlag.textContent = lang.flag;
+            currentLangName.textContent = lang.name;
+            updateTexts();
+        }
+
+        // Открытие модального окна выбора языка
+        langSelector.addEventListener('click', () => {
+            langModal.classList.remove('hidden');
+            renderLanguages();
+        });
+
+        // Закрытие модального окна при клике вне его
+        langModal.addEventListener('click', (e) => {
+            if (e.target === langModal) {
+                langModal.classList.add('hidden');
+            }
+        });
+
+        // Инициализация языка при загрузке
+        updateLanguage();
 
         // Инициализация при загрузке страницы
         initAttempts();
@@ -385,13 +676,14 @@
 
         // Handle file selection
         function handleFile(file) {
+            const t = translations[currentLang];
             if (!file || !file.type.startsWith('image/')) {
-                showError('Пожалуйста, выберите изображение');
+                showError(t.errorImage);
                 return;
             }
 
             if (file.size > 10 * 1024 * 1024) {
-                showError('Размер файла не должен превышать 10MB');
+                showError(t.errorSize);
                 return;
             }
 
@@ -413,9 +705,11 @@
         analyzeBtn.addEventListener('click', async () => {
             if (!selectedFile) return;
 
+            const t = translations[currentLang];
+
             // Show loading state
             analyzeBtn.disabled = true;
-            btnText.textContent = 'Анализируем...';
+            btnText.textContent = t.analyzing;
             btnSpinner.classList.remove('hidden');
             resultsSection.classList.add('hidden');
             errorArea.classList.add('hidden');
@@ -471,7 +765,7 @@
                 showError('Ошибка подключения к серверу: ' + error.message);
             } finally {
                 analyzeBtn.disabled = false;
-                btnText.textContent = '🔍 Проанализировать ставку';
+                btnText.textContent = t.analyzeBtn;
                 btnSpinner.classList.add('hidden');
             }
         });
