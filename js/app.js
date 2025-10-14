@@ -279,7 +279,7 @@ function resetUI() {
     errorArea.classList.add('hidden');
 }
 
-function handleFile(file) {
+async function handleFile(file) {
     if (!file || !file.type.startsWith('image/')) {
         showError('Пожалуйста, выберите изображение');
         return;
@@ -292,14 +292,17 @@ function handleFile(file) {
 
     selectedFile = file;
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
         previewImg.src = e.target.result;
         uploadPrompt.classList.add('hidden');
         imagePreview.classList.remove('hidden');
         analyzeBtn.classList.remove('hidden');
-        attemptsInfo.classList.remove('hidden');
         resultsSection.classList.add('hidden');
         errorArea.classList.add('hidden');
+        
+        // Загружаем актуальные данные о попытках перед показом счетчика
+        await initAttempts();
+        attemptsInfo.classList.remove('hidden');
     };
     reader.readAsDataURL(file);
 }
