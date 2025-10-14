@@ -130,18 +130,41 @@ if (savedLang && languages[savedLang]) {
 // ========== ИНИЦИАЛИЗАЦИЯ ПОПЫТОК ==========
 async function initAttempts() {
     try {
-        const url = userId ? `/attempts?user_id=${userId}` : '/attempts';
-        const response = await fetch(`${API_BASE}${url}`);
-
-        const data = await response.json();
+        console.log('🔄 Загрузка попыток...', {userId, API_BASE});
         
-        if (data.success) {
+        if (!API_BASE || API_BASE === '') {
+            console.error('❌ API_BASE не установлен!');
+            attemptsCounter.textContent = '—';
+            attemptsCounterMain.textContent = '—';
+            return false;
+        }
+        
+        const url = userId ? `/attempts?user_id=${userId}` : '/attempts';
+        console.log('📡 Запрос:', `${API_BASE}${url}`);
+        
+        const response = await fetch(`${API_BASE}${url}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ Ответ от сервера:', data);
+        
+        if (data.success && data.attempts) {
             updateAttemptsDisplay(data.attempts);
+            return true;
+        } else {
+            console.error('⚠️ Неверный формат ответа:', data);
+            attemptsCounter.textContent = '—';
+            attemptsCounterMain.textContent = '—';
+            return false;
         }
     } catch (error) {
-        console.error('Ошибка загрузки информации о попытках:', error);
+        console.error('❌ Ошибка загрузки попыток:', error);
         attemptsCounter.textContent = '—';
         attemptsCounterMain.textContent = '—';
+        return false;
     }
 }
 
@@ -253,7 +276,7 @@ function resetUI() {
     errorArea.classList.add('hidden');
 }
 
-function handleFile(file) {
+async function handleFile(file) {
     if (!file || !file.type.startsWith('image/')) {
         showError('Пожалуйста, выберите изображение');
         return;
@@ -266,14 +289,26 @@ function handleFile(file) {
 
     selectedFile = file;
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
         previewImg.src = e.target.result;
         uploadPrompt.classList.add('hidden');
         imagePreview.classList.remove('hidden');
         analyzeBtn.classList.remove('hidden');
-        attemptsInfo.classList.remove('hidden');
         resultsSection.classList.add('hidden');
         errorArea.classList.add('hidden');
+        
+        // Загружаем актуальные данные о попытках перед показом счетчика
+        console.log('📸 Изображение загружено, получаем данные из БД...');
+        const success = await initAttempts();
+        
+        if (success) {
+            console.log('✅ Данные из БД получены, показываем счетчик');
+            attemptsInfo.classList.remove('hidden');
+        } else {
+            console.warn('⚠️ Не удалось загрузить данные из БД');
+            // Все равно показываем счетчик с прочерками
+            attemptsInfo.classList.remove('hidden');
+        }
     };
     reader.readAsDataURL(file);
 }
@@ -298,57 +333,40 @@ analyzeBtn.addEventListener('click', async () => {
     }
 
     try {
-        // ВРЕМЕННО: Тестовый режим без сервера
-        if (!API_BASE || API_BASE === '') {
-            // Показываем тестовые данные через 2 секунды
-            await new Promise(resolve => setTimeout(resolve, 2000));
+        const response = await fetch(`${API_BASE}/analyze`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.status === 429) {
+            if (data.attempts) {
+                updateAttemptsDisplay(data.attempts);
+            }
+            showError(
+                data.error || 'Вы исчерпали все попытки на сегодня!',
+                data.purchase_url,
+                data.purchase_text
+            );
+            return;
+        }
+
+        if (data.success) {
+            if (data.attempts) {
+                const remaining = updateAttemptsDisplay(data.attempts);
+                
+                if (remaining === 0) {
+                    setTimeout(() => {
+                        showError('Это была ваша последняя попытка на сегодня!');
+                    }, 1000);
+                }
+            }
             
-            const testData = {
-                success: true,
-                confidence: 75,
-                recommended_bet: 'Победа Команды 1',
-                analysis: '⚽ **Тестовый анализ:**\n\nКоманда 1 показывает отличную форму в последних матчах. Рекомендуется ставка на победу с коэффициентом уверенности 75%.\n\n**Ключевые факторы:**\n- Домашнее преимущество\n- Хорошая статистика последних игр\n- Слабая защита соперника'
-            };
-            
-            displayResults(testData);
+            displayResults(data);
             resultsSection.classList.remove('hidden');
         } else {
-            // Обычный режим с сервером
-            const response = await fetch(`${API_BASE}/analyze`, {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (response.status === 429) {
-                if (data.attempts) {
-                    updateAttemptsDisplay(data.attempts);
-                }
-                showError(
-                    data.error || 'Вы исчерпали все попытки на сегодня!',
-                    data.purchase_url,
-                    data.purchase_text
-                );
-                return;
-            }
-
-            if (data.success) {
-                if (data.attempts) {
-                    const remaining = updateAttemptsDisplay(data.attempts);
-                    
-                    if (remaining === 0) {
-                        setTimeout(() => {
-                            showError('Это была ваша последняя попытка на сегодня!');
-                        }, 1000);
-                    }
-                }
-                
-                displayResults(data);
-                resultsSection.classList.remove('hidden');
-            } else {
-                showError(data.error || 'Произошла ошибка при анализе');
-            }
+            showError(data.error || 'Произошла ошибка при анализе');
         }
     } catch (error) {
         showError('Ошибка подключения к серверу: ' + error.message);
@@ -426,5 +444,4 @@ function showError(message, purchaseUrl = null, purchaseText = null) {
 }
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
-// ВРЕМЕННО ОТКЛЮЧЕНО: initAttempts() - нет API сервера
-// initAttempts();
+console.log('✅ Приложение загружено. Загрузите изображение для начала работы.');
