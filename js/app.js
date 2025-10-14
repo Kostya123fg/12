@@ -130,18 +130,44 @@ if (savedLang && languages[savedLang]) {
 // ========== ИНИЦИАЛИЗАЦИЯ ПОПЫТОК ==========
 async function initAttempts() {
     try {
+        console.log('🔄 Загрузка попыток...', {userId, API_BASE});
+        
+        if (!API_BASE || API_BASE === '') {
+            console.warn('⚠️ API_BASE пустой, показываем дефолтные значения');
+            updateAttemptsDisplay({
+                remaining: 5,
+                total: 5,
+                unlimited: false
+            });
+            return;
+        }
+        
         const url = userId ? `/attempts?user_id=${userId}` : '/attempts';
+        console.log('📡 Запрос:', `${API_BASE}${url}`);
+        
         const response = await fetch(`${API_BASE}${url}`);
-
         const data = await response.json();
+        
+        console.log('✅ Ответ от сервера:', data);
         
         if (data.success) {
             updateAttemptsDisplay(data.attempts);
+        } else {
+            console.warn('⚠️ Сервер вернул ошибку');
+            updateAttemptsDisplay({
+                remaining: 5,
+                total: 5,
+                unlimited: false
+            });
         }
     } catch (error) {
-        console.error('Ошибка загрузки информации о попытках:', error);
-        attemptsCounter.textContent = '—';
-        attemptsCounterMain.textContent = '—';
+        console.error('❌ Ошибка загрузки попыток:', error);
+        // Показываем дефолтное значение вместо прочерков
+        updateAttemptsDisplay({
+            remaining: 5,
+            total: 5,
+            unlimited: false
+        });
     }
 }
 
