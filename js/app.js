@@ -130,44 +130,18 @@ if (savedLang && languages[savedLang]) {
 // ========== ИНИЦИАЛИЗАЦИЯ ПОПЫТОК ==========
 async function initAttempts() {
     try {
-        console.log('🔄 Загрузка попыток...', {userId, API_BASE});
-        
-        if (!API_BASE || API_BASE === '') {
-            console.warn('⚠️ API_BASE пустой, показываем дефолтные значения');
-            updateAttemptsDisplay({
-                remaining: 5,
-                total: 5,
-                unlimited: false
-            });
-            return;
-        }
-        
         const url = userId ? `/attempts?user_id=${userId}` : '/attempts';
-        console.log('📡 Запрос:', `${API_BASE}${url}`);
-        
         const response = await fetch(`${API_BASE}${url}`);
+
         const data = await response.json();
-        
-        console.log('✅ Ответ от сервера:', data);
         
         if (data.success) {
             updateAttemptsDisplay(data.attempts);
-        } else {
-            console.warn('⚠️ Сервер вернул ошибку');
-            updateAttemptsDisplay({
-                remaining: 5,
-                total: 5,
-                unlimited: false
-            });
         }
     } catch (error) {
-        console.error('❌ Ошибка загрузки попыток:', error);
-        // Показываем дефолтное значение вместо прочерков
-        updateAttemptsDisplay({
-            remaining: 5,
-            total: 5,
-            unlimited: false
-        });
+        console.error('Ошибка загрузки информации о попытках:', error);
+        attemptsCounter.textContent = '—';
+        attemptsCounterMain.textContent = '—';
     }
 }
 
@@ -279,7 +253,7 @@ function resetUI() {
     errorArea.classList.add('hidden');
 }
 
-async function handleFile(file) {
+function handleFile(file) {
     if (!file || !file.type.startsWith('image/')) {
         showError('Пожалуйста, выберите изображение');
         return;
@@ -292,17 +266,14 @@ async function handleFile(file) {
 
     selectedFile = file;
     const reader = new FileReader();
-    reader.onload = async (e) => {
+    reader.onload = (e) => {
         previewImg.src = e.target.result;
         uploadPrompt.classList.add('hidden');
         imagePreview.classList.remove('hidden');
         analyzeBtn.classList.remove('hidden');
+        attemptsInfo.classList.remove('hidden');
         resultsSection.classList.add('hidden');
         errorArea.classList.add('hidden');
-        
-        // Загружаем актуальные данные о попытках перед показом счетчика
-        await initAttempts();
-        attemptsInfo.classList.remove('hidden');
     };
     reader.readAsDataURL(file);
 }
@@ -327,40 +298,57 @@ analyzeBtn.addEventListener('click', async () => {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/analyze`, {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (response.status === 429) {
-            if (data.attempts) {
-                updateAttemptsDisplay(data.attempts);
-            }
-            showError(
-                data.error || 'Вы исчерпали все попытки на сегодня!',
-                data.purchase_url,
-                data.purchase_text
-            );
-            return;
-        }
-
-        if (data.success) {
-            if (data.attempts) {
-                const remaining = updateAttemptsDisplay(data.attempts);
-                
-                if (remaining === 0) {
-                    setTimeout(() => {
-                        showError('Это была ваша последняя попытка на сегодня!');
-                    }, 1000);
-                }
-            }
+        // ВРЕМЕННО: Тестовый режим без сервера
+        if (!API_BASE || API_BASE === '') {
+            // Показываем тестовые данные через 2 секунды
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
-            displayResults(data);
+            const testData = {
+                success: true,
+                confidence: 75,
+                recommended_bet: 'Победа Команды 1',
+                analysis: '⚽ **Тестовый анализ:**\n\nКоманда 1 показывает отличную форму в последних матчах. Рекомендуется ставка на победу с коэффициентом уверенности 75%.\n\n**Ключевые факторы:**\n- Домашнее преимущество\n- Хорошая статистика последних игр\n- Слабая защита соперника'
+            };
+            
+            displayResults(testData);
             resultsSection.classList.remove('hidden');
         } else {
-            showError(data.error || 'Произошла ошибка при анализе');
+            // Обычный режим с сервером
+            const response = await fetch(`${API_BASE}/analyze`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.status === 429) {
+                if (data.attempts) {
+                    updateAttemptsDisplay(data.attempts);
+                }
+                showError(
+                    data.error || 'Вы исчерпали все попытки на сегодня!',
+                    data.purchase_url,
+                    data.purchase_text
+                );
+                return;
+            }
+
+            if (data.success) {
+                if (data.attempts) {
+                    const remaining = updateAttemptsDisplay(data.attempts);
+                    
+                    if (remaining === 0) {
+                        setTimeout(() => {
+                            showError('Это была ваша последняя попытка на сегодня!');
+                        }, 1000);
+                    }
+                }
+                
+                displayResults(data);
+                resultsSection.classList.remove('hidden');
+            } else {
+                showError(data.error || 'Произошла ошибка при анализе');
+            }
         }
     } catch (error) {
         showError('Ошибка подключения к серверу: ' + error.message);
@@ -438,14 +426,5 @@ function showError(message, purchaseUrl = null, purchaseText = null) {
 }
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
-// Вызываем после полной загрузки страницы
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('📄 Страница загружена, инициализация...');
-    initAttempts();
-});
-
-// Также вызываем сразу (на случай если DOMContentLoaded уже произошел)
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    console.log('📄 Страница уже загружена, инициализация...');
-    setTimeout(() => initAttempts(), 100);
-}
+// ВРЕМЕННО ОТКЛЮЧЕНО: initAttempts() - нет API сервера
+// initAttempts();
