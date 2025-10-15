@@ -567,7 +567,12 @@
 
         // ========== КОНФИГУРАЦИЯ API ==========
         // Для webapp все запросы идут к текущему серверу
-        const API_BASE = '';
+      const urlParams = new URLSearchParams(window.location.search);
+      const serverFromUrl = urlParams.get('server');
+
+      let API_BASE = serverFromUrl || 'http://localhost:5000';
+
+console.log('🔗 API_BASE:', API_BASE);
 
         // ========== DOM ЭЛЕМЕНТЫ ==========
         // Инициализация Telegram WebApp
