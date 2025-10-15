@@ -7,6 +7,55 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root {
+            --accent-color: #10b981;
+            --accent-dark: #059669;
+            --accent-light: #34d399;
+            --accent-color-rgb: 16, 185, 129;
+        }
+        
+        body.theme-ufc {
+            --accent-color: #ef4444;
+            --accent-dark: #dc2626;
+            --accent-light: #f87171;
+            --accent-color-rgb: 239, 68, 68;
+        }
+        
+        body.theme-cs2 {
+            --accent-color: #f59e0b;
+            --accent-dark: #d97706;
+            --accent-light: #fbbf24;
+            --accent-color-rgb: 245, 158, 11;
+        }
+        
+        body.theme-dota {
+            --accent-color: #a855f7;
+            --accent-dark: #9333ea;
+            --accent-light: #c084fc;
+            --accent-color-rgb: 168, 85, 247;
+        }
+        
+        body.theme-hockey {
+            --accent-color: #06b6d4;
+            --accent-dark: #0891b2;
+            --accent-light: #22d3ee;
+            --accent-color-rgb: 6, 182, 212;
+        }
+        
+        body.theme-boxing {
+            --accent-color: #dc2626;
+            --accent-dark: #b91c1c;
+            --accent-light: #f87171;
+            --accent-color-rgb: 220, 38, 38;
+        }
+        
+        body.theme-basketball {
+            --accent-color: #f97316;
+            --accent-dark: #ea580c;
+            --accent-light: #fb923c;
+            --accent-color-rgb: 249, 115, 22;
+        }
+        
         body {
             background: linear-gradient(180deg, #1a1f2e 0%, #161b28 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -21,14 +70,14 @@
             background: #232d3f;
             border: 2px dashed rgba(100, 116, 139, 0.4);
             border-radius: 12px;
-            transition: all 0.3s ease;
+            transition: all 0.3s ease, border-color 0.5s ease;
         }
         .upload-container:hover {
-            border-color: rgba(16, 185, 129, 0.5);
+            border-color: rgba(var(--accent-color-rgb), 0.5);
         }
         .upload-container.dragover {
-            background: rgba(16, 185, 129, 0.1);
-            border-color: #10b981;
+            background: rgba(var(--accent-color-rgb), 0.1);
+            border-color: var(--accent-color);
         }
         .preview-image {
             width: 100%;
@@ -37,8 +86,8 @@
             border-radius: 8px;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-dark) 100%);
+            box-shadow: 0 4px 16px rgba(var(--accent-color-rgb), 0.3);
             border: none;
             color: white;
             font-weight: 600;
@@ -47,11 +96,11 @@
             border-radius: 8px;
             width: 100%;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.5s ease;
         }
         .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 6px 20px rgba(var(--accent-color-rgb), 0.4);
         }
         .btn-primary:disabled {
             opacity: 0.6;
@@ -73,15 +122,16 @@
         }
         .progress-bar {
             height: 6px;
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(var(--accent-color-rgb), 0.2);
             border-radius: 3px;
             overflow: hidden;
+            transition: background 0.5s ease;
         }
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+            background: linear-gradient(90deg, var(--accent-color) 0%, var(--accent-light) 100%);
             border-radius: 3px;
-            transition: width 0.6s ease;
+            transition: width 0.6s ease, background 0.5s ease;
         }
         .stat-badge {
             display: inline-block;
@@ -91,8 +141,9 @@
             font-weight: 600;
         }
         .confidence-high {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
+            background: rgba(var(--accent-color-rgb), 0.2);
+            color: var(--accent-color);
+            transition: all 0.5s ease;
         }
         #analyticsText strong {
             color: #fff;
@@ -129,7 +180,15 @@
 
         <!-- Category -->
         <div class="mb-4">
-            <span class="text-gray-300 text-sm">Футбол</span>
+            <select id="categorySelect" class="category-select bg-slate-800 text-gray-300 text-sm px-3 py-2 rounded-lg border border-slate-700 focus:outline-none cursor-pointer transition-colors" style="border-color: var(--accent-color);">
+                <option value="football">⚽ Футбол</option>
+                <option value="ufc">🥊 UFC</option>
+                <option value="cs2">🎮 CS 2</option>
+                <option value="dota">⚔️ Dota 2</option>
+                <option value="hockey">🏒 Хоккей</option>
+                <option value="boxing">🥊 Бокс</option>
+                <option value="basketball">🏀 Баскетбол</option>
+            </select>
         </div>
 
         <!-- Upload Container -->
@@ -217,7 +276,13 @@
         const translations = {
             ru: {
                 title: 'Ставки от AI',
-                category: 'Футбол',
+                categoryFootball: '⚽ Футбол',
+                categoryUFC: '🥊 UFC',
+                categoryCS2: '🎮 CS 2',
+                categoryDota: '⚔️ Dota 2',
+                categoryHockey: '🏒 Хоккей',
+                categoryBoxing: '🥊 Бокс',
+                categoryBasketball: '🏀 Баскетбол',
                 uploadTitle: '📸 Загрузите изображение события',
                 uploadSubtitle: 'Или просто вставьте скриншот (Ctrl + V)',
                 changeImage: '📤 Попробовать другое изображение',
@@ -235,7 +300,13 @@
             },
             en: {
                 title: 'AI Betting',
-                category: 'Football',
+                categoryFootball: '⚽ Football',
+                categoryUFC: '🥊 UFC',
+                categoryCS2: '🎮 CS 2',
+                categoryDota: '⚔️ Dota 2',
+                categoryHockey: '🏒 Hockey',
+                categoryBoxing: '🥊 Boxing',
+                categoryBasketball: '🏀 Basketball',
                 uploadTitle: '📸 Upload event image',
                 uploadSubtitle: 'Or just paste a screenshot (Ctrl + V)',
                 changeImage: '📤 Try another image',
@@ -253,7 +324,13 @@
             },
             hi: {
                 title: 'AI से दांव',
-                category: 'फुटबॉल',
+                categoryFootball: '⚽ फुटबॉल',
+                categoryUFC: '🥊 UFC',
+                categoryCS2: '🎮 CS 2',
+                categoryDota: '⚔️ Dota 2',
+                categoryHockey: '🏒 हॉकी',
+                categoryBoxing: '🥊 मुक्केबाजी',
+                categoryBasketball: '🏀 बास्केटबॉल',
                 uploadTitle: '📸 इवेंट छवि अपलोड करें',
                 uploadSubtitle: 'या बस एक स्क्रीनशॉट पेस्ट करें (Ctrl + V)',
                 changeImage: '📤 दूसरी छवि आज़माएं',
@@ -271,7 +348,13 @@
             },
             es: {
                 title: 'Apuestas IA',
-                category: 'Fútbol',
+                categoryFootball: '⚽ Fútbol',
+                categoryUFC: '🥊 UFC',
+                categoryCS2: '🎮 CS 2',
+                categoryDota: '⚔️ Dota 2',
+                categoryHockey: '🏒 Hockey',
+                categoryBoxing: '🥊 Boxeo',
+                categoryBasketball: '🏀 Baloncesto',
                 uploadTitle: '📸 Subir imagen del evento',
                 uploadSubtitle: 'O simplemente pega una captura (Ctrl + V)',
                 changeImage: '📤 Probar otra imagen',
@@ -289,7 +372,13 @@
             },
             az: {
                 title: 'AI Mərcləri',
-                category: 'Futbol',
+                categoryFootball: '⚽ Futbol',
+                categoryUFC: '🥊 UFC',
+                categoryCS2: '🎮 CS 2',
+                categoryDota: '⚔️ Dota 2',
+                categoryHockey: '🏒 Xokkey',
+                categoryBoxing: '🥊 Boks',
+                categoryBasketball: '🏀 Basketbol',
                 uploadTitle: '📸 Tədbir şəklini yükləyin',
                 uploadSubtitle: 'Və ya sadəcə ekran görüntüsü yapışdırın (Ctrl + V)',
                 changeImage: '📤 Başqa şəkil sınayın',
@@ -307,7 +396,13 @@
             },
             pt: {
                 title: 'Apostas IA',
-                category: 'Futebol',
+                categoryFootball: '⚽ Futebol',
+                categoryUFC: '🥊 UFC',
+                categoryCS2: '🎮 CS 2',
+                categoryDota: '⚔️ Dota 2',
+                categoryHockey: '🏒 Hóquei',
+                categoryBoxing: '🥊 Boxe',
+                categoryBasketball: '🏀 Basquete',
                 uploadTitle: '📸 Carregar imagem do evento',
                 uploadSubtitle: 'Ou apenas cole uma captura (Ctrl + V)',
                 changeImage: '📤 Tentar outra imagem',
@@ -325,7 +420,13 @@
             },
             tr: {
                 title: 'AI Bahisleri',
-                category: 'Futbol',
+                categoryFootball: '⚽ Futbol',
+                categoryUFC: '🥊 UFC',
+                categoryCS2: '🎮 CS 2',
+                categoryDota: '⚔️ Dota 2',
+                categoryHockey: '🏒 Hokey',
+                categoryBoxing: '🥊 Boks',
+                categoryBasketball: '🏀 Basketbol',
                 uploadTitle: '📸 Etkinlik görselini yükleyin',
                 uploadSubtitle: 'Veya sadece ekran görüntüsü yapıştırın (Ctrl + V)',
                 changeImage: '📤 Başka resim deneyin',
@@ -343,7 +444,13 @@
             },
             ar: {
                 title: 'رهانات الذكاء الاصطناعي',
-                category: 'كرة القدم',
+                categoryFootball: '⚽ كرة القدم',
+                categoryUFC: '🥊 UFC',
+                categoryCS2: '🎮 CS 2',
+                categoryDota: '⚔️ Dota 2',
+                categoryHockey: '🏒 هوكي',
+                categoryBoxing: '🥊 ملاكمة',
+                categoryBasketball: '🏀 كرة السلة',
                 uploadTitle: '📸 تحميل صورة الحدث',
                 uploadSubtitle: 'أو قم بلصق لقطة شاشة (Ctrl + V)',
                 changeImage: '📤 جرب صورة أخرى',
@@ -361,7 +468,13 @@
             },
             uz: {
                 title: 'AI Tikish',
-                category: 'Futbol',
+                categoryFootball: '⚽ Futbol',
+                categoryUFC: '🥊 UFC',
+                categoryCS2: '🎮 CS 2',
+                categoryDota: '⚔️ Dota 2',
+                categoryHockey: '🏒 Xokkey',
+                categoryBoxing: '🥊 Boks',
+                categoryBasketball: '🏀 Basketbol',
                 uploadTitle: '📸 Tadbir rasmini yuklang',
                 uploadSubtitle: 'Yoki shunchaki ekran tasvirini joylashtiring (Ctrl + V)',
                 changeImage: '📤 Boshqa rasmni sinab ko\'ring',
@@ -407,8 +520,16 @@
             const h1 = document.querySelector('h1');
             if (h1) h1.textContent = t.title;
             
-            const category = document.querySelector('.mb-4 span');
-            if (category) category.textContent = t.category;
+            const categorySelect = document.getElementById('categorySelect');
+            if (categorySelect) {
+                categorySelect.options[0].text = t.categoryFootball;
+                categorySelect.options[1].text = t.categoryUFC;
+                categorySelect.options[2].text = t.categoryCS2;
+                categorySelect.options[3].text = t.categoryDota;
+                categorySelect.options[4].text = t.categoryHockey;
+                categorySelect.options[5].text = t.categoryBoxing;
+                categorySelect.options[6].text = t.categoryBasketball;
+            }
             
             // Загрузка изображения
             const uploadPrompt = document.getElementById('uploadPrompt');
@@ -616,6 +737,18 @@
 
         // Инициализация языка при загрузке
         updateLanguage();
+
+        // Переключение темы по категории
+        const categorySelect = document.getElementById('categorySelect');
+        categorySelect.addEventListener('change', (e) => {
+            const body = document.body;
+            // Удаляем все темы
+            body.classList.remove('theme-ufc', 'theme-cs2', 'theme-dota', 'theme-hockey', 'theme-boxing', 'theme-basketball');
+            // Добавляем нужную тему
+            if (e.target.value !== 'football') {
+                body.classList.add('theme-' + e.target.value);
+            }
+        });
 
         // Инициализация при загрузке страницы
         initAttempts();
