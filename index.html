@@ -992,12 +992,6 @@ console.log('🔗 API_BASE:', API_BASE);
         }
 
         function showError(message, purchaseUrl = null, purchaseText = null) {
-            // Если не передали URL и текст, используем конфиг с сервера
-            if (!purchaseUrl && !purchaseText) {
-                purchaseUrl = purchaseConfig.url;
-                purchaseText = purchaseConfig.text;
-            }
-            
             // Очищаем предыдущее содержимое
             errorText.innerHTML = '';
             
@@ -1007,7 +1001,7 @@ console.log('🔗 API_BASE:', API_BASE);
             messageDiv.className = 'mb-3';
             errorText.appendChild(messageDiv);
             
-            // Если есть ссылка на покупку, показываем кнопку
+            // Показываем кнопку только если сервер явно вернул её
             if (purchaseUrl && purchaseText) {
                 const purchaseBtn = document.createElement('a');
                 purchaseBtn.href = purchaseUrl;
