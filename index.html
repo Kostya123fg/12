@@ -272,33 +272,6 @@
     </div>
 
     <script>
-        // ========== КОНФИГУРАЦИЯ ==========
-        let purchaseConfig = {
-            url: 'https://t.me/Tvoy_smysl_zhizni?text=привет%20хочу%20купить%20безлимит%20в%20ставки%20ai%20за%2010%20долларов',
-            text: 'купить безлимит за 10 $'
-        };
-
-        async function loadConfig() {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const serverFromUrl = urlParams.get('server');
-                const apiBase = serverFromUrl || 'http://localhost:5000';
-                
-                const response = await fetch(`${apiBase}/config`);
-                const data = await response.json();
-                purchaseConfig = {
-                    url: data.purchase_url,
-                    text: data.purchase_text
-                };
-                console.log('✅ Config loaded:', purchaseConfig);
-            } catch (error) {
-                console.error('❌ Ошибка загрузки конфига:', error);
-            }
-        }
-
-        // Загружаем конфиг сразу при загрузке страницы
-        loadConfig();
-
         // ========== МУЛЬТИЯЗЫЧНОСТЬ ==========
         const translations = {
             ru: {
@@ -908,11 +881,11 @@ console.log('🔗 API_BASE:', API_BASE);
                     if (data.attempts) {
                         updateAttemptsDisplay(data.attempts);
                     }
-                    // Показываем ошибку с кнопкой покупки
+                    // Показываем ошибку только с кнопкой, если сервер её вернул
                     showError(
                         data.error || 'Вы исчерпали все попытки на сегодня!',
-                        data.purchase_url,
-                        data.purchase_text
+                        data.purchase_url || null,
+                        data.purchase_text || null
                     );
                     return;
                 }
